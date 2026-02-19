@@ -5,7 +5,6 @@ import java.util.Set;
 
 public interface FAInterface {
 
-
 	/**
 	 * Adds a a state to the FA instance
 	 * @param name is the label of the state 

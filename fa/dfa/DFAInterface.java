@@ -29,7 +29,7 @@ public interface DFAInterface extends FAInterface{
 	 * @param fromState is the label of the state where the transition starts
 	 * @param toState is the label of the state where the transition ends
 	 * @param onSymb is the symbol from the DFA's alphabet.
-	 * @return true if successful and false if one of the states don't exist or the symbol in not in the alphabet
+	 * @return true if successful and false if one of the states don't exist or the symbol is not in the alphabet
 	 */
 	public  boolean addTransition(String fromState, String toState, char onSymb);
 	
