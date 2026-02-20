@@ -1,304 +1,314 @@
 package fa.dfa;
 
-
-
-import fa.FAInterface;
 import fa.State;
-
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
- * Deterministic Finite Automaton implementation.
+ * Implementation of a Deterministic Finite Automaton (DFA).
+ * Implements the DFAInterface and stores the DFA's 5-tuple:
+ * (Q, Sigma, delta, q0, F) where:
+ * <ul>
+ *   <li>Q is the set of states (LinkedHashSet to preserve insertion order)</li>
+ *   <li>Sigma is the alphabet (LinkedHashSet to preserve insertion order)</li>
+ *   <li>delta is the transition function (stored per-state in DFAState)</li>
+ *   <li>q0 is the start state</li>
+ *   <li>F is the set of final/accepting states</li>
+ * </ul>
  *
- * Implements DFAInterface.
- *
- * @author Lance Loper
+ * @author Lance
  */
 public class DFA implements DFAInterface {
 
-    /* Alphabet */
-    private LinkedHashSet<Character> sigma;
-
-    /* States */
+    /** The set of all states, in insertion order. */
     private LinkedHashSet<DFAState> states;
 
-    /* Lookup table for states by name */
-    private Map<String, DFAState> stateMap;
+    /** The input alphabet, in insertion order. */
+    private LinkedHashSet<Character> sigma;
 
-    /* Start state */
-    private DFAState startState;
+    /** The name of the start state. */
+    private String startState;
 
-    /* Final states */
-    private LinkedHashSet<DFAState> finalStates;
+    /** The set of accepting state names, in insertion order. */
+    private LinkedHashSet<String> finalStates;
 
     /**
-     * Construct empty DFA.
+     * Constructs an empty DFA with no states, no alphabet, no start state,
+     * and no final states.
      */
     public DFA() {
-        sigma = new LinkedHashSet<>();
         states = new LinkedHashSet<>();
-        stateMap = new HashMap<>();
-        finalStates = new LinkedHashSet<>();
+        sigma = new LinkedHashSet<>();
         startState = null;
+        finalStates = new LinkedHashSet<>();
     }
 
-    /* ================= Alphabet ================= */
+    /**
+     * Adds a new state with the given name to the DFA.
+     *
+     * @param name the label for the new state
+     * @return true if the state was added successfully; false if a state with that name already exists
+     */
+    @Override
+    public boolean addState(String name) {
+        // Check for duplicates
+        if (getState(name) != null) {
+            return false;
+        }
+        states.add(new DFAState(name));
+        return true;
+    }
 
+    /**
+     * Marks an existing state as a final (accepting) state.
+     *
+     * @param name the label of the state to mark as final
+     * @return true if successful; false if no state with that name exists
+     */
+    @Override
+    public boolean setFinal(String name) {
+        if (getState(name) == null) {
+            return false;
+        }
+        finalStates.add(name);
+        return true;
+    }
+
+    /**
+     * Sets the start state of the DFA.
+     *
+     * @param name the label of the state to set as the start state
+     * @return true if successful; false if no state with that name exists
+     */
+    @Override
+    public boolean setStart(String name) {
+        if (getState(name) == null) {
+            return false;
+        }
+        startState = name;
+        return true;
+    }
+
+    /**
+     * Adds a symbol to the DFA's alphabet (Sigma).
+     *
+     * @param symbol the character to add to the alphabet
+     */
     @Override
     public void addSigma(char symbol) {
-
-        if (sigma.contains(symbol)) {
-            return;
-        }
-
         sigma.add(symbol);
     }
 
-    /* ================= States ================= */
-
+    /**
+     * Simulates the DFA on input string s.
+     * The special string "e" represents the empty string epsilon.
+     *
+     * @param s the input string to test
+     * @return true if the DFA accepts s; false otherwise
+     */
     @Override
-    public boolean addState(String name) {
-
-        if (stateMap.containsKey(name)) {
-            return false;
-        }
-
-        DFAState s = new DFAState(name);
-
-        states.add(s);
-        stateMap.put(name, s);
-
-        return true;
-    }
-
-    @Override
-    public boolean setStart(String name) {
-
-        DFAState s = stateMap.get(name);
-
-        if (s == null) {
-            return false;
-        }
-
-        startState = s;
-        return true;
-    }
-
-    @Override
-    public boolean setFinal(String name) {
-
-        DFAState s = stateMap.get(name);
-
-        if (s == null) {
-            return false;
-        }
-
-        finalStates.add(s);
-        return true;
-    }
-
-    /* ================= Transitions ================= */
-
-    @Override
-    public boolean addTransition(String fromState,
-                                 String toState,
-                                 char symbol) {
-
-        if (!sigma.contains(symbol)) {
-            return false;
-        }
-
-        DFAState from = stateMap.get(fromState);
-        DFAState to = stateMap.get(toState);
-
-        if (from == null || to == null) {
-            return false;
-        }
-
-        from.addTransition(symbol, to);
-
-        return true;
-    }
-
-    /* ================= Acceptance ================= */
-
-    @Override
-    public boolean accepts(String input) {
-
+    public boolean accepts(String s) {
         if (startState == null) {
             return false;
         }
 
-        DFAState current = startState;
+        String current = startState;
 
-        /* Empty string */
-        if (input.equals("e")) {
+        // Handle empty string "e" as epsilon
+        if (s.equals("e")) {
             return finalStates.contains(current);
         }
 
-        for (int i = 0; i < input.length(); i++) {
-
-            char c = input.charAt(i);
-
+        // Process each character
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
             if (!sigma.contains(c)) {
                 return false;
             }
-
-            DFAState next = current.getTransition(c);
-
+            DFAState currentState = (DFAState) getState(current);
+            if (currentState == null) {
+                return false;
+            }
+            String next = currentState.getTransition(c);
             if (next == null) {
                 return false;
             }
-
             current = next;
         }
 
         return finalStates.contains(current);
     }
 
+    /**
+     * Returns the alphabet of this DFA.
+     *
+     * @return a Set of characters representing Sigma
+     */
     @Override
     public Set<Character> getSigma() {
-        return Set.of();
+        return sigma;
     }
 
+    /**
+     * Returns the state with the given name, or null if it doesn't exist.
+     *
+     * @param name the name of the state to retrieve
+     * @return the State object with the given name, or null
+     */
     @Override
     public State getState(String name) {
+        for (DFAState s : states) {
+            if (s.getName().equals(name)) {
+                return s;
+            }
+        }
         return null;
     }
 
+    /**
+     * Determines whether the state with the given name is a final state.
+     *
+     * @param name the name of the state
+     * @return true if the state exists and is final; false otherwise
+     */
     @Override
     public boolean isFinal(String name) {
-        return false;
+        return finalStates.contains(name);
     }
 
+    /**
+     * Determines whether the state with the given name is the start state.
+     *
+     * @param name the name of the state
+     * @return true if the state exists and is the start state; false otherwise
+     */
     @Override
     public boolean isStart(String name) {
-        return false;
+        if (startState == null) return false;
+        return startState.equals(name);
     }
 
-    /* ================= Swap ================= */
+    /**
+     * Adds a transition to the DFA's transition function delta.
+     *
+     * @param fromState the label of the source state
+     * @param toState   the label of the destination state
+     * @param onSymb    the input symbol triggering this transition
+     * @return true if successful; false if either state doesn't exist or the symbol is not in Sigma
+     */
+    @Override
+    public boolean addTransition(String fromState, String toState, char onSymb) {
+        // Validate both states exist and symbol is in alphabet
+        if (getState(fromState) == null || getState(toState) == null || !sigma.contains(onSymb)) {
+            return false;
+        }
+        DFAState from = (DFAState) getState(fromState);
+        from.addTransition(onSymb, toState);
+        return true;
+    }
 
+    /**
+     * Creates a deep copy of this DFA with the transition labels for symb1 and symb2 swapped.
+     * The original DFA is not modified.
+     *
+     * @param symb1 the first symbol to swap
+     * @param symb2 the second symbol to swap
+     * @return a new DFA that is a deep copy with those transitions swapped
+     */
     @Override
     public DFA swap(char symb1, char symb2) {
+        DFA copy = new DFA();
 
-        DFA newDFA = new DFA();
-
-        /* Copy alphabet */
+        // Copy alphabet
         for (char c : sigma) {
-            newDFA.addSigma(c);
+            copy.addSigma(c);
         }
 
-        /* Copy states */
+        // Copy states
         for (DFAState s : states) {
-            newDFA.addState(s.getName());
+            copy.addState(s.getName());
         }
 
-        /* Copy start */
+        // Copy start and final states
         if (startState != null) {
-            newDFA.setStart(startState.getName());
+            copy.setStart(startState);
+        }
+        for (String f : finalStates) {
+            copy.setFinal(f);
         }
 
-        /* Copy finals */
-        for (DFAState s : finalStates) {
-            newDFA.setFinal(s.getName());
-        }
-
-        /* Copy transitions with swap */
+        // Copy transitions with symb1 and symb2 swapped
         for (DFAState s : states) {
-
-            DFAState from = s;
-
-            for (Map.Entry<Character, DFAState> e
-                    : s.getTransitions().entrySet()) {
-
-                char c = e.getKey();
-                DFAState to = e.getValue();
-
-                char newChar = c;
-
-                if (c == symb1) {
-                    newChar = symb2;
-                } else if (c == symb2) {
-                    newChar = symb1;
+            for (char c : sigma) {
+                String dest = s.getTransition(c);
+                if (dest != null) {
+                    // Determine which symbol to use in the copy
+                    char copySymbol;
+                    if (c == symb1) {
+                        copySymbol = symb2;
+                    } else if (c == symb2) {
+                        copySymbol = symb1;
+                    } else {
+                        copySymbol = c;
+                    }
+                    copy.addTransition(s.getName(), dest, copySymbol);
                 }
-
-                newDFA.addTransition(
-                        from.getName(),
-                        to.getName(),
-                        newChar
-                );
             }
         }
 
-        return newDFA;
+        return copy;
     }
 
-    /* ================= toString ================= */
-
+    /**
+     * Returns a textual representation of this DFA showing all 5-tuple components.
+     * States and alphabet symbols appear in insertion order.
+     *
+     * @return a formatted string representation of the DFA
+     */
     @Override
     public String toString() {
-
         StringBuilder sb = new StringBuilder();
 
-        /* Q */
+        // Q = { states }
         sb.append("Q = { ");
         for (DFAState s : states) {
             sb.append(s.getName()).append(" ");
         }
         sb.append("}\n");
 
-        /* Sigma */
+        // Sigma = { symbols }
         sb.append("Sigma = { ");
         for (char c : sigma) {
             sb.append(c).append(" ");
         }
         sb.append("}\n");
 
-        /* delta */
+        // delta table header
         sb.append("delta =\n");
-
-        /* Header */
-        sb.append("  ");
+        sb.append("\t\t");
         for (char c : sigma) {
-            sb.append(c).append(" ");
+            sb.append(c).append("\t");
         }
         sb.append("\n");
 
-        /* Rows */
+        // delta table rows
         for (DFAState s : states) {
-
-            sb.append(s.getName()).append(" ");
-
+            sb.append("\t").append(s.getName()).append("\t");
             for (char c : sigma) {
-
-                DFAState dest = s.getTransition(c);
-
-                if (dest != null) {
-                    sb.append(dest.getName()).append(" ");
-                } else {
-                    sb.append("  ");
-                }
+                String dest = s.getTransition(c);
+                sb.append(dest != null ? dest : "?").append("\t");
             }
-
             sb.append("\n");
         }
 
-        /* q0 */
-        sb.append("q0 = ");
+        // q0 = start
+        sb.append("q0 = ").append(startState).append("\n");
 
-        if (startState != null) {
-            sb.append(startState.getName());
-        }
-
-        sb.append("\n");
-
-        /* F */
+        // F = { final states }
         sb.append("F = { ");
-
-        for (DFAState s : finalStates) {
-            sb.append(s.getName()).append(" ");
+        for (String f : finalStates) {
+            sb.append(f).append(" ");
         }
-
         sb.append("}");
 
         return sb.toString();

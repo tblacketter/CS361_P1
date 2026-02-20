@@ -5,21 +5,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Represents a state in a DFA.
+ * Represents a state in a Deterministic Finite Automaton (DFA).
+ * Extends the abstract State class and stores transition information
+ * for this state as a map from input symbols to destination state names.
  *
- * Each state stores its outgoing transitions.
- *
- * @author
+ * @author Lance
  */
 public class DFAState extends State {
 
-    /* Map: input symbol -> destination state */
-    private Map<Character, DFAState> transitions;
+    /** Maps input symbols to the name of the destination state. */
+    private Map<Character, String> transitions;
 
     /**
-     * Create a DFA state with given name.
+     * Constructs a DFAState with the given name.
+     * Initializes an empty transition map.
      *
-     * @param name State name
+     * @param name the unique label for this state
      */
     public DFAState(String name) {
         super(name);
@@ -27,31 +28,31 @@ public class DFAState extends State {
     }
 
     /**
-     * Add a transition from this state.
+     * Adds or updates a transition from this state on the given symbol.
      *
-     * @param c Input symbol
-     * @param to Destination state
+     * @param symbol  the input symbol triggering this transition
+     * @param toState the name of the destination state
      */
-    public void addTransition(char c, DFAState to) {
-        transitions.put(c, to);
+    public void addTransition(char symbol, String toState) {
+        transitions.put(symbol, toState);
     }
 
     /**
-     * Get next state for given symbol.
+     * Returns the name of the state this state transitions to on the given symbol.
      *
-     * @param c Input symbol
-     * @return Destination state
+     * @param symbol the input symbol
+     * @return the name of the destination state, or null if no transition exists
      */
-    public DFAState getTransition(char c) {
-        return transitions.get(c);
+    public String getTransition(char symbol) {
+        return transitions.get(symbol);
     }
 
     /**
-     * Get all transitions.
+     * Returns the full transition map for this state.
      *
-     * @return Transition map
+     * @return a map from input symbols to destination state names
      */
-    public Map<Character, DFAState> getTransitions() {
+    public Map<Character, String> getTransitions() {
         return transitions;
     }
 }
