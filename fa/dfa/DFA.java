@@ -8,15 +8,14 @@ import java.util.Set;
  * Implementation of a Deterministic Finite Automaton (DFA).
  * Implements the DFAInterface and stores the DFA's 5-tuple:
  * (Q, Sigma, delta, q0, F) where:
- * <ul>
- *   <li>Q is the set of states (LinkedHashSet to preserve insertion order)</li>
- *   <li>Sigma is the alphabet (LinkedHashSet to preserve insertion order)</li>
- *   <li>delta is the transition function (stored per-state in DFAState)</li>
- *   <li>q0 is the start state</li>
- *   <li>F is the set of final/accepting states</li>
- * </ul>
+ *  Q is the set of states (LinkedHashSet to preserve insertion order)
+ *  Sigma is the alphabet (LinkedHashSet to preserve insertion order)
+ *  delta is the transition function (stored per-state in DFAState)
+ *  q0 is the start state
+ *  F is the set of final/accepting states
  *
- * @author Lance
+ *
+ * @author Lance, Teryn
  */
 public class DFA implements DFAInterface {
 

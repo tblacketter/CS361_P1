@@ -9,7 +9,7 @@ import java.util.Map;
  * Extends the abstract State class and stores transition information
  * for this state as a map from input symbols to destination state names.
  *
- * @author Lance
+ * @author Lance, Teryn
  */
 public class DFAState extends State {
 
